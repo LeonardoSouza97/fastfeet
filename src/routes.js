@@ -25,10 +25,10 @@ routes.post('/deliveryman', DeliverymanController.store);
 routes.put('/deliveryman', DeliverymanController.update);
 routes.delete('/deliveryman/:id', DeliverymanController.delete);
 
-// routes.get('/delivery', DeliveryController.index);
+routes.get('/delivery', DeliveryController.index);
 routes.post('/delivery', DeliveryController.store);
-// routes.put('/delivery', DeliveryController.update);
-// routes.delete('/delivery/:id', DeliveryController.delete);
+routes.put('/delivery', DeliveryController.update);
+routes.delete('/delivery/:id', DeliveryController.delete);
 
 routes.put('/users', UserController.update);
 

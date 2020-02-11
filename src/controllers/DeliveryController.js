@@ -6,6 +6,23 @@ import Queue from '../lib/Queue';
 import DeliveryEmail from '../jobs/DeliveryEmail';
 
 class DeliveryController {
+  async index(req, res) {
+    const deliveries = await Delivery.findAll({
+      where: { canceled_at: null },
+      attributes: ['id', 'product', 'start_date', 'end_date'],
+      include: [
+        { model: Recipient, as: 'recipient' },
+        { model: Deliveryman, as: 'deliveryman' },
+      ],
+    });
+
+    if (!deliveries) {
+      return res.json(204).json({ message: 'Nenhuma encomenda encontrada' });
+    }
+
+    return res.json(deliveries);
+  }
+
   async store(req, res) {
     const schema = Yup.object({
       product: Yup.string().required(),
@@ -51,11 +68,54 @@ class DeliveryController {
     return res.status(201).json(delivery);
   }
 
-  // async store(req, res) {}
+  async update(req, res) {
+    const schema = Yup.object({
+      id: Yup.number().required(),
+      recipient_id: Yup.number().required(),
+      deliveryman_id: Yup.number().required(),
+    });
 
-  // async update(req, res) {}
+    if (!(await schema.isValid(req.body))) {
+      return res.status(400).json({ error: 'Campos inválidos' });
+    }
 
-  // async delete(req, res) {}
+    const { id, recipient_id, deliveryman_id } = req.body;
+
+    const deliveryExists = await Delivery.findByPk(id);
+
+    if (!deliveryExists) {
+      return res.status(400).json({ error: 'Encomenda não encontrada' });
+    }
+
+    const recipientExists = await Recipient.findByPk(recipient_id);
+
+    if (!recipientExists) {
+      return res.status(400).json({ error: 'Destinatário não encontrado' });
+    }
+
+    const deliveryManExists = await Deliveryman.findByPk(deliveryman_id);
+
+    if (!deliveryManExists) {
+      return res.status(400).json({ error: 'Entregador não encontrado' });
+    }
+
+    const { product } = await deliveryExists.update(req.body);
+
+    return res.json({ id, product });
+  }
+
+  async delete(req, res) {
+    const { id } = req.params;
+    const delivery = await Delivery.findByPk(id);
+
+    if (!delivery) {
+      return res.status(400).json({ error: 'Encomenda não encontrada' });
+    }
+
+    await Delivery.destroy({ where: { id } });
+
+    return res.status(204).json({ message: 'Encomenda deletada com sucesso' });
+  }
 }
 
 export default new DeliveryController();
